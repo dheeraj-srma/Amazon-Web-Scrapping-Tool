@@ -1,0 +1,6 @@
+{
+  "name": "Amazon Product Scraper",
+  "description": "Scrape and extract Amazon product specifications, ratings, sizing, materials, INR pricing, and multi-variant comparisons across sizes, colors, and builds.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
