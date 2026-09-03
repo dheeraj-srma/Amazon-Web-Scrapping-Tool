@@ -10,16 +10,20 @@ export interface SellerOffer {
 export interface ProductVariant {
   id: string;
   skuOrAsin?: string;
-  size?: string;         // e.g. "UK 7", "UK 8", "UK 9", "Medium", "XL"
+  size?: string;         // e.g. "250 g", "UK 7", "1 Litre", "XL"
   color?: string;        // e.g. "Slate Blue", "Matte Black", "Army Green"
-  buildType?: string;    // e.g. "Tri-Ply Stainless Steel", "Virgin Aluminium", "Hard Anodised", "Pro ANC"
+  flavour?: string;      // e.g. "Fruit Punch", "Unflavoured", "Double Rich Chocolate", "Watermelon"
+  style?: string;        // e.g. "Standard", "With Shaker", "Pack of 2", "Wireless ANC"
+  buildType?: string;    // e.g. "Tri-Ply Stainless Steel", "Virgin Aluminium", "Hard Anodised"
   material?: string;     // e.g. "Breathable Air Mesh", "SS 304 Grade", "100% Khadi Cotton"
-  dimensions?: string;   // e.g. "500 ml", "1 Litre", "3 Litre", "1.96-inch AMOLED"
+  dimensions?: string;   // e.g. "250 g", "500 ml", "1 Litre", "3 Litre", "15.6-inch"
   price: number;
   originalPrice?: number;
   inStock: boolean;
   image?: string;
   seller?: string;
+  optionLabel?: string;  // Composite display label e.g. "Fruit Punch · 250 g"
+  attributes?: Record<string, string>;
 }
 
 export interface AmazonProduct {
@@ -54,8 +58,11 @@ export interface AmazonProduct {
   variants?: ProductVariant[];
   priceRange?: { min: number; max: number };
   availableColors?: string[];
+  availableFlavours?: string[];
+  availableStyles?: string[];
   availableBuildTypes?: string[];
   availableDimensions?: string[];
+  availableSizes?: string[];
   selectedVariantId?: string;
 }
 

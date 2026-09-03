@@ -21,6 +21,42 @@ interface ProductTableViewProps {
   onToggleCompare: (product: AmazonProduct) => void;
 }
 
+function getProductDisplaySizes(p: AmazonProduct): string[] {
+  if (p.sizes && p.sizes.length > 0) {
+    return p.sizes;
+  }
+  if (p.availableDimensions && p.availableDimensions.length > 0) {
+    return p.availableDimensions;
+  }
+  if (p.specifications) {
+    for (const [k, v] of Object.entries(p.specifications)) {
+      const lower = k.toLowerCase();
+      if (
+        (lower.includes("dimension") ||
+          lower.includes("size") ||
+          lower.includes("capacity") ||
+          lower.includes("volume") ||
+          lower.includes("weight") ||
+          lower.includes("screen")) &&
+        v &&
+        v !== "-" &&
+        v !== "N/A"
+      ) {
+        return [v];
+      }
+    }
+  }
+  const volMatch = p.title.match(/\b(\d+(?:\.\d+)?\s*(?:ml|l|litre|litres|liter|liters|kg|g|gm|oz|cm|mm|m|inch|inches|ft|gb|tb|mah|watt|w))\b/i);
+  if (volMatch) {
+    return [volMatch[1]];
+  }
+  const dimMatch = p.title.match(/\b(\d+(?:\.\d+)?\s*(?:x|×)\s*\d+(?:\.\d+)?(?:\s*(?:x|×)\s*\d+(?:\.\d+)?)?\s*(?:cm|mm|m|inch|inches|in))\b/i);
+  if (dimMatch) {
+    return [dimMatch[1]];
+  }
+  return [];
+}
+
 export const ProductTableView: React.FC<ProductTableViewProps> = ({
   products,
   onSelect,
@@ -47,8 +83,8 @@ export const ProductTableView: React.FC<ProductTableViewProps> = ({
               <th className="py-3.5 px-4 min-w-[140px]">Price & Range (INR ₹)</th>
               <th className="py-3.5 px-4 min-w-[120px]">Option Variety</th>
               <th className="py-3.5 px-4 min-w-[110px]">Rating</th>
-              <th className="py-3.5 px-4 min-w-[130px]">Sizes Available</th>
-              <th className="py-3.5 px-4 min-w-[130px]">Materials & Build</th>
+              <th className="py-3.5 px-4 min-w-[150px]">Size / Flavour / Options</th>
+              <th className="py-3.5 px-4 min-w-[130px]">Build / Form / Material</th>
               <th className="py-3.5 px-4 min-w-[90px]">ASIN</th>
               <th className="py-3.5 px-4 text-right">Actions</th>
             </tr>
@@ -57,6 +93,7 @@ export const ProductTableView: React.FC<ProductTableViewProps> = ({
             {products.map((p) => {
               const isCompared = comparedIds.includes(p.id);
               const priceInfo = formatPriceDisplay(p);
+              const displaySizes = getProductDisplaySizes(p);
 
               return (
                 <tr
@@ -176,30 +213,50 @@ export const ProductTableView: React.FC<ProductTableViewProps> = ({
                     )}
                   </td>
 
-                  {/* Sizes */}
+                  {/* Sizes / Flavours / Dimensions */}
                   <td className="py-3 px-4">
-                    {p.sizes && p.sizes.length > 0 ? (
-                      <div className="flex flex-wrap gap-1 max-w-[180px]">
-                        {p.sizes.slice(0, 3).map((s, idx) => (
-                          <span
-                            key={idx}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200"
-                          >
-                            {s}
-                          </span>
-                        ))}
-                        {p.sizes.length > 3 && (
-                          <span className="text-[10px] px-1 py-0.5 rounded bg-slate-100 text-slate-400">
-                            +{p.sizes.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-slate-400 text-[11px]">Standard</span>
-                    )}
+                    <div className="flex flex-col gap-1 max-w-[220px]">
+                      {p.availableFlavours && p.availableFlavours.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {p.availableFlavours.slice(0, 2).map((fl, idx) => (
+                            <span
+                              key={idx}
+                              className="text-[10px] px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 font-semibold"
+                            >
+                              {fl}
+                            </span>
+                          ))}
+                          {p.availableFlavours.length > 2 && (
+                            <span className="text-[10px] px-1 py-0.5 rounded bg-purple-50 text-purple-600 font-medium">
+                              +{p.availableFlavours.length - 2} flv
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {displaySizes.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {displaySizes.slice(0, 3).map((s, idx) => (
+                            <span
+                              key={idx}
+                              className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-medium"
+                            >
+                              {s}
+                            </span>
+                          ))}
+                          {displaySizes.length > 3 && (
+                            <span className="text-[10px] px-1 py-0.5 rounded bg-slate-100 text-slate-400">
+                              +{displaySizes.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        !p.availableFlavours?.length && <span className="text-slate-400 text-[11px]">-</span>
+                      )}
+                    </div>
                   </td>
 
-                  {/* Materials */}
+                  {/* Materials / Form */}
                   <td className="py-3 px-4">
                     {p.materials && p.materials.length > 0 ? (
                       <div className="flex flex-wrap gap-1 max-w-[160px]">

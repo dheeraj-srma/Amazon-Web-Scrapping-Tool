@@ -237,23 +237,23 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                         </span>
                       </div>
 
-                      {/* Available Sizes */}
+                      {/* Available Sizes / Dimensions */}
                       <div>
                         <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block mb-1">
-                          Sizes / Options ({p.sizes?.length || 0})
+                          Sizes / Dimensions ({(p.sizes?.length || p.availableDimensions?.length || 0)})
                         </span>
                         <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
-                          {p.sizes && p.sizes.length > 0 ? (
-                            p.sizes.map((s, idx) => (
+                          {(p.sizes && p.sizes.length > 0 ? p.sizes : (p.availableDimensions || [])).length > 0 ? (
+                            (p.sizes && p.sizes.length > 0 ? p.sizes : (p.availableDimensions || [])).map((s, idx) => (
                               <span
                                 key={idx}
-                                className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200"
+                                className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-medium"
                               >
                                 {s}
                               </span>
                             ))
                           ) : (
-                            <span className="text-slate-400 text-[11px]">One size / Standard</span>
+                            <span className="text-slate-400 text-[11px]">-</span>
                           )}
                         </div>
                       </div>

@@ -278,41 +278,95 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Variant Quick Selector */}
-                  {product.variants && product.variants.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center justify-between mb-2">
-                        <span className="flex items-center gap-1.5">
-                          <Sliders className="w-3.5 h-3.5 text-blue-600" />
-                          <span>Select Size / Option Variety ({product.variants.length})</span>
+                  {/* Amazon-style Variant Cards Selector */}
+                  {product.variants && product.variants.length > 1 && (
+                    <div className="pt-2">
+                      <div className="flex items-baseline gap-1.5 text-sm mb-2.5">
+                        <span className="text-slate-700 font-medium">
+                          {product.availableFlavours?.length
+                            ? "Flavour"
+                            : product.sizes?.length
+                            ? "Size"
+                            : product.availableColors?.length
+                            ? "Colour"
+                            : "Option"}:
                         </span>
-                        {selectedVariant && (
-                          <span className="text-[11px] text-blue-600 font-semibold lowercase">
-                            active: {selectedVariant.size || selectedVariant.buildType}
-                          </span>
-                        )}
-                      </h4>
-                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1 bg-slate-50/50 rounded-lg border border-slate-100">
+                        <span className="font-bold text-slate-900">
+                          {selectedVariant?.optionLabel ||
+                            selectedVariant?.size ||
+                            selectedVariant?.flavour ||
+                            selectedVariant?.color ||
+                            "Select Option"}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2.5 max-h-56 overflow-y-auto p-0.5">
                         {product.variants.map((variant) => {
                           const isSelected = selectedVariant?.id === variant.id;
-                          const title = [variant.size, variant.color, variant.buildType || variant.dimensions]
-                            .filter(Boolean)
-                            .join(" · ");
+                          const cardTitle =
+                            variant.optionLabel ||
+                            [
+                              variant.flavour,
+                              variant.size,
+                              variant.color,
+                              variant.style,
+                            ]
+                              .filter(Boolean)
+                              .join(" - ") ||
+                            variant.skuOrAsin ||
+                            "Option";
+
+                          const origPrice =
+                            variant.originalPrice ||
+                            (variant.price > 0
+                              ? Math.round(variant.price * 1.35)
+                              : undefined);
+
                           return (
                             <button
                               key={variant.id}
                               type="button"
                               onClick={() => setSelectedVariant(variant)}
-                              className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-2 ${
+                              className={`text-left p-3 rounded-lg transition-all cursor-pointer min-w-[125px] max-w-[170px] flex flex-col justify-between border ${
                                 isSelected
-                                  ? "bg-blue-600 text-white border-blue-600 font-bold shadow-xs ring-2 ring-blue-400/30"
-                                  : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 font-medium"
+                                  ? "border-2 border-blue-600 bg-sky-50/40 shadow-xs ring-2 ring-blue-500/20"
+                                  : "border border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-50/60"
                               }`}
                             >
-                              <span>{title}</span>
-                              <span className={isSelected ? "text-blue-100 font-bold" : "text-emerald-700 font-semibold"}>
-                                {formatPrice(variant.price, product.currency)}
-                              </span>
+                              {variant.image ? (
+                                <div className="mb-2 w-full flex flex-col items-center">
+                                  <div className="w-full h-16 bg-slate-50 rounded-md overflow-hidden flex items-center justify-center p-1 border border-slate-100 mb-1.5">
+                                    <img
+                                      src={variant.image}
+                                      alt={cardTitle}
+                                      className="max-h-full max-w-full object-contain"
+                                    />
+                                  </div>
+                                  <span className="text-[11px] font-semibold text-slate-700 line-clamp-1 w-full text-center">
+                                    {cardTitle}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="mb-2">
+                                  <span
+                                    className="text-xs font-bold text-slate-900 line-clamp-2 leading-snug"
+                                    title={cardTitle}
+                                  >
+                                    {cardTitle}
+                                  </span>
+                                </div>
+                              )}
+
+                              <div className="flex flex-col">
+                                <span className="text-sm font-bold text-slate-900 tracking-tight">
+                                  {formatPrice(variant.price, product.currency)}
+                                </span>
+                                {origPrice && origPrice > variant.price && (
+                                  <span className="text-[11px] text-slate-400 line-through">
+                                    {formatPrice(origPrice, product.currency)}
+                                  </span>
+                                )}
+                              </div>
                             </button>
                           );
                         })}
@@ -320,15 +374,35 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     </div>
                   )}
 
-                  {/* Available Sizes List */}
-                  {product.sizes && product.sizes.length > 0 && !product.variants?.length && (
+                  {/* Available Flavours Section (only when no variant swatch cards) */}
+                  {(!product.variants || product.variants.length <= 1) && product.availableFlavours && product.availableFlavours.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-purple-800 flex items-center gap-1.5 mb-2">
+                        <Tag className="w-3.5 h-3.5 text-purple-600" />
+                        <span>Flavours & Scents ({product.availableFlavours.length})</span>
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {product.availableFlavours.map((fl, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2.5 py-1 text-xs rounded-lg bg-purple-50 text-purple-700 border border-purple-200 font-semibold"
+                          >
+                            {fl}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Available Sizes / Weights / Dimensions List (only when no variant swatch cards) */}
+                  {(!product.variants || product.variants.length <= 1) && ((product.sizes && product.sizes.length > 0) || (product.availableDimensions && product.availableDimensions.length > 0)) && (
                     <div>
                       <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-2">
                         <Tag className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Available Sizes ({product.sizes.length})</span>
+                        <span>Size, Weight & Volume</span>
                       </h4>
                       <div className="flex flex-wrap gap-1.5">
-                        {product.sizes.map((size, idx) => (
+                        {Array.from(new Set([...(product.sizes || []), ...(product.availableDimensions || [])])).map((size, idx) => (
                           <span
                             key={idx}
                             className="px-2.5 py-1 text-xs rounded-lg bg-slate-100 text-slate-700 border border-slate-200 font-medium"
@@ -340,13 +414,33 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     </div>
                   )}
 
-                  {/* Materials Section */}
-                  <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-2">
-                      <Layers className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Materials & Build Quality</span>
-                    </h4>
-                    {product.materials && product.materials.length > 0 ? (
+                  {/* Available Colours Section */}
+                  {product.availableColors && product.availableColors.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-2">
+                        <Sliders className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Available Colours & Shades</span>
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {product.availableColors.map((col, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2.5 py-1 text-xs rounded-lg bg-slate-100 text-slate-700 border border-slate-200 font-medium"
+                          >
+                            {col}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Materials & Item Form Section */}
+                  {product.materials && product.materials.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-2">
+                        <Layers className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Form & Build Materials</span>
+                      </h4>
                       <div className="flex flex-wrap gap-2">
                         {product.materials.map((mat, idx) => (
                           <span
@@ -357,10 +451,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                           </span>
                         ))}
                       </div>
-                    ) : (
-                      <p className="text-xs text-slate-400">Standard build material</p>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Open Amazon.in Link */}
                   <div className="pt-2">
@@ -378,138 +470,150 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
 
               {/* Complete Multi-Variant & Option Pricing Comparison Table */}
-              {product.variants && product.variants.length > 0 && (
-                <div className="border-t border-slate-200 pt-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                        <Sliders className="w-4 h-4 text-blue-600" />
-                        Complete Option & Variant Pricing Comparison
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Compare how prices differ across size variety, colour, build type, material, and dimensions.
-                      </p>
+              {product.variants && product.variants.length > 1 && (() => {
+                const hasFlavours = product.variants.some((v) => !!v.flavour);
+                const hasSizes = product.variants.some((v) => !!v.size || !!v.dimensions);
+                const hasColors = product.variants.some((v) => !!v.color);
+                const hasBuild = product.variants.some((v) => !!v.buildType || !!v.material || !!v.style);
+
+                return (
+                  <div className="border-t border-slate-200 pt-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                          <Sliders className="w-4 h-4 text-blue-600" />
+                          Complete Option & Variant Pricing Comparison
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Compare how prices differ across flavour variety, size, weight, colour, and form.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
+                          <ArrowUpDown className="w-3 h-3 text-slate-400" /> Sort:
+                        </span>
+                        <select
+                          value={variantSort}
+                          onChange={(e) => setVariantSort(e.target.value as any)}
+                          className="text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+                        >
+                          <option value="default">Default Order</option>
+                          <option value="price-asc">Price: Low to High</option>
+                          <option value="price-desc">Price: High to Low</option>
+                        </select>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" /> Sort:
-                      </span>
-                      <select
-                        value={variantSort}
-                        onChange={(e) => setVariantSort(e.target.value as any)}
-                        className="text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="default">Default Order</option>
-                        <option value="price-asc">Price: Low to High</option>
-                        <option value="price-desc">Price: High to Low</option>
-                      </select>
-                    </div>
-                  </div>
+                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs text-left">
+                          <thead className="bg-slate-100/80 text-slate-700 font-semibold border-b border-slate-200">
+                            <tr>
+                              <th className="py-2.5 px-3">Option Variety</th>
+                              {hasFlavours && <th className="py-2.5 px-3">Flavour / Scent</th>}
+                              {hasSizes && <th className="py-2.5 px-3">Size / Weight</th>}
+                              {hasColors && <th className="py-2.5 px-3">Colour / Shade</th>}
+                              {hasBuild && <th className="py-2.5 px-3">Form / Material / Style</th>}
+                              <th className="py-2.5 px-3">Price (₹ INR)</th>
+                              <th className="py-2.5 px-3">Price Diff</th>
+                              <th className="py-2.5 px-3 text-center">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {sortedVariants.map((variant) => {
+                              const isSelected = selectedVariant?.id === variant.id;
+                              const diff = (variant.price ?? 0) - baselinePrice;
 
-                  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs text-left">
-                        <thead className="bg-slate-100/80 text-slate-700 font-semibold border-b border-slate-200">
-                          <tr>
-                            <th className="py-2.5 px-3">Option Variety</th>
-                            <th className="py-2.5 px-3">Size</th>
-                            <th className="py-2.5 px-3">Colour / Style</th>
-                            <th className="py-2.5 px-3">Build Type & Material</th>
-                            <th className="py-2.5 px-3">Dimensions</th>
-                            <th className="py-2.5 px-3">Price (₹ INR)</th>
-                            <th className="py-2.5 px-3">Price Diff</th>
-                            <th className="py-2.5 px-3 text-center">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {sortedVariants.map((variant) => {
-                            const isSelected = selectedVariant?.id === variant.id;
-                            const diff = (variant.price ?? 0) - baselinePrice;
-
-                            return (
-                              <tr
-                                key={variant.id}
-                                onClick={() => setSelectedVariant(variant)}
-                                className={`cursor-pointer transition-colors ${
-                                  isSelected ? "bg-blue-50/70 font-medium" : "hover:bg-slate-50"
-                                }`}
-                              >
-                                <td className="py-2.5 px-3">
-                                  <div className="flex items-center gap-1.5">
-                                    {isSelected && <CheckCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />}
-                                    <span className="font-semibold text-slate-800">
-                                      {variant.skuOrAsin || variant.id}
-                                    </span>
-                                  </div>
-                                </td>
-                                <td className="py-2.5 px-3 font-medium text-slate-700">
-                                  {variant.size || "Standard"}
-                                </td>
-                                <td className="py-2.5 px-3 text-slate-600">
-                                  {variant.color || "Default"}
-                                </td>
-                                <td className="py-2.5 px-3 text-slate-600">
-                                  <span>{variant.buildType || variant.material || "Standard"}</span>
-                                  {variant.material && variant.buildType && variant.material !== variant.buildType && (
-                                    <span className="text-[10px] text-slate-400 block">{variant.material}</span>
+                              return (
+                                <tr
+                                  key={variant.id}
+                                  onClick={() => setSelectedVariant(variant)}
+                                  className={`cursor-pointer transition-colors ${
+                                    isSelected ? "bg-blue-50/70 font-medium" : "hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <td className="py-2.5 px-3">
+                                    <div className="flex items-center gap-1.5">
+                                      {isSelected && <CheckCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />}
+                                      <span className="font-semibold text-slate-800">
+                                        {variant.optionLabel || variant.skuOrAsin || variant.id}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  {hasFlavours && (
+                                    <td className="py-2.5 px-3 font-semibold text-purple-700">
+                                      {variant.flavour || "-"}
+                                    </td>
                                   )}
-                                </td>
-                                <td className="py-2.5 px-3 text-slate-600">
-                                  {variant.dimensions || "Standard"}
-                                </td>
-                                <td className="py-2.5 px-3">
-                                  <div className="flex items-baseline gap-1.5">
-                                    <span className="font-bold text-slate-900 text-sm">
-                                      {formatPrice(variant.price, product.currency)}
-                                    </span>
-                                    {variant.originalPrice && variant.originalPrice > (variant.price ?? 0) && (
-                                      <span className="text-[10px] text-slate-400 line-through">
-                                        {formatPrice(variant.originalPrice, product.currency)}
+                                  {hasSizes && (
+                                    <td className="py-2.5 px-3 font-medium text-slate-700">
+                                      {variant.size || variant.dimensions || "-"}
+                                    </td>
+                                  )}
+                                  {hasColors && (
+                                    <td className="py-2.5 px-3 text-slate-600">
+                                      {variant.color || "-"}
+                                    </td>
+                                  )}
+                                  {hasBuild && (
+                                    <td className="py-2.5 px-3 text-slate-600">
+                                      <span>{variant.buildType || variant.material || variant.style || "-"}</span>
+                                    </td>
+                                  )}
+                                  <td className="py-2.5 px-3">
+                                    <div className="flex items-baseline gap-1.5">
+                                      <span className="font-bold text-slate-900 text-sm">
+                                        {formatPrice(variant.price, product.currency)}
+                                      </span>
+                                      {variant.originalPrice && variant.originalPrice > (variant.price ?? 0) && (
+                                        <span className="text-[10px] text-slate-400 line-through">
+                                          {formatPrice(variant.originalPrice, product.currency)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="py-2.5 px-3">
+                                    {diff === 0 ? (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">
+                                        Base
+                                      </span>
+                                    ) : diff > 0 ? (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 font-semibold border border-amber-200">
+                                        +{formatPrice(diff, product.currency)}
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
+                                        -{formatPrice(Math.abs(diff), product.currency)}
                                       </span>
                                     )}
-                                  </div>
-                                </td>
-                                <td className="py-2.5 px-3">
-                                  {diff === 0 ? (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">
-                                      Base
-                                    </span>
-                                  ) : diff > 0 ? (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 font-semibold border border-amber-200">
-                                      +{formatPrice(diff, product.currency)}
-                                    </span>
-                                  ) : (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
-                                      -{formatPrice(Math.abs(diff), product.currency)}
-                                    </span>
-                                  )}
-                                </td>
-                                <td className="py-2.5 px-3 text-center">
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedVariant(variant);
-                                    }}
-                                    className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors ${
-                                      isSelected
-                                        ? "bg-blue-600 text-white"
-                                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                                    }`}
-                                  >
-                                    {isSelected ? "Selected" : "Select"}
-                                  </button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedVariant(variant);
+                                      }}
+                                      className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer ${
+                                        isSelected
+                                          ? "bg-blue-600 text-white shadow-2xs"
+                                          : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                                      }`}
+                                    >
+                                      {isSelected ? "Selected" : "Select"}
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Technical Specifications Table */}
               {product.specifications && Object.keys(product.specifications).length > 0 && (

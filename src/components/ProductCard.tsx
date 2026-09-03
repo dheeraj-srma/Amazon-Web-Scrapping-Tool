@@ -188,12 +188,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        {/* Interactive Option Chips (Size / Option with individual prices) */}
-        {product.variants && product.variants.length > 0 ? (
+        {/* Interactive Option Chips (Flavours / Size / Option with individual prices) */}
+        {product.variants && product.variants.length > 1 ? (
           <div className="mb-3">
             <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 mb-1.5">
               <span className="flex items-center gap-1">
-                <Tag className="w-3 h-3 text-blue-600" /> Options & Prices ({product.variants.length}):
+                <Tag className="w-3 h-3 text-blue-600" /> Options & Pricing ({product.variants.length}):
               </span>
               <span className="text-[10px] text-blue-600 font-semibold">Click to select</span>
             </div>
@@ -201,7 +201,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
               {product.variants.slice(0, 8).map((v) => {
                 const isSelected = selectedVariant?.id === v.id;
-                const label = [v.size, v.buildType || v.dimensions].filter(Boolean).join(" · ");
+                const label = v.optionLabel || [v.flavour, v.size, v.color, v.style, v.buildType || v.material].filter(Boolean).join(" · ");
                 return (
                   <button
                     key={v.id}
@@ -216,7 +216,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
                     }`}
                   >
-                    <span>{label || v.color || "Option"}</span>
+                    <span>{label || "Option"}</span>
                     <span className={isSelected ? "text-blue-100 font-bold" : "text-emerald-700 font-medium"}>
                       {formatPrice(v.price, product.currency)}
                     </span>
@@ -225,46 +225,61 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               })}
             </div>
           </div>
-        ) : product.sizes && product.sizes.length > 0 ? (
-          /* Standard Sizes fallback */
-          <div className="mb-2.5">
-            <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1 mb-1">
-              <Tag className="w-3 h-3 text-blue-600" /> Sizes ({product.sizes.length}):
-            </span>
-            <div className="flex flex-wrap gap-1 max-h-12 overflow-hidden">
-              {product.sizes.slice(0, 5).map((size, idx) => (
-                <span
-                  key={idx}
-                  className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200"
-                >
-                  {size}
+        ) : (
+          <div className="mb-2.5 flex flex-col gap-1.5">
+            {product.availableFlavours && product.availableFlavours.length > 0 && (
+              <div>
+                <span className="text-[10px] font-semibold text-purple-700 uppercase tracking-wide block mb-0.5">
+                  Flavour:
                 </span>
-              ))}
-              {product.sizes.length > 5 && (
-                <span className="text-[10px] px-1 py-0.5 rounded bg-slate-100 text-slate-500">
-                  +{product.sizes.length - 5} more
-                </span>
-              )}
-            </div>
-          </div>
-        ) : null}
+                <div className="flex flex-wrap gap-1">
+                  {product.availableFlavours.slice(0, 3).map((fl, idx) => (
+                    <span
+                      key={idx}
+                      className="text-[10px] px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 font-semibold"
+                    >
+                      {fl}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {/* Extracted Materials Tag Group */}
-        {product.materials && product.materials.length > 0 && (
-          <div className="mb-3">
-            <span className="text-[11px] font-medium text-slate-500 mb-1 block">
-              Materials:
-            </span>
-            <div className="flex flex-wrap gap-1">
-              {product.materials.slice(0, 2).map((mat, idx) => (
-                <span
-                  key={idx}
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-medium"
-                >
-                  {mat}
+            {((product.sizes && product.sizes.length > 0) || (product.availableDimensions && product.availableDimensions.length > 0)) && (
+              <div>
+                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-0.5">
+                  Size / Weight:
                 </span>
-              ))}
-            </div>
+                <div className="flex flex-wrap gap-1 max-h-12 overflow-hidden">
+                  {(product.sizes?.length ? product.sizes : product.availableDimensions || []).slice(0, 4).map((size, idx) => (
+                    <span
+                      key={idx}
+                      className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-medium"
+                    >
+                      {size}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {product.materials && product.materials.length > 0 && (
+              <div>
+                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-0.5">
+                  Build / Form:
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {product.materials.slice(0, 2).map((mat, idx) => (
+                    <span
+                      key={idx}
+                      className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-medium"
+                    >
+                      {mat}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

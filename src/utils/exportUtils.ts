@@ -24,7 +24,7 @@ export function exportToCsv(products: AmazonProduct[], filename = "amazon-scrape
     "Original Price",
     "Rating",
     "Review Count",
-    "Sizes",
+    "Size / Dimensions",
     "Materials",
     "Brand",
     "Is Prime",
@@ -39,22 +39,28 @@ export function exportToCsv(products: AmazonProduct[], filename = "amazon-scrape
     return `"${str}"`;
   };
 
-  const rows = products.map((p) => [
-    escapeCsv(p.asin || ""),
-    escapeCsv(p.title),
-    escapeCsv(p.price !== null ? p.price : ""),
-    escapeCsv(p.currency),
-    escapeCsv(p.originalPrice !== null ? p.originalPrice : ""),
-    escapeCsv(p.rating !== null ? p.rating : ""),
-    escapeCsv(p.reviewCount !== null ? p.reviewCount : ""),
-    escapeCsv(p.sizes?.join("; ") || ""),
-    escapeCsv(p.materials?.join("; ") || ""),
-    escapeCsv(p.brand || ""),
-    escapeCsv(p.isPrime ? "Yes" : "No"),
-    escapeCsv(p.inStock ? "Yes" : "No"),
-    escapeCsv(p.url),
-    escapeCsv(p.image)
-  ]);
+  const rows = products.map((p) => {
+    const sizeOrDim = (p.sizes && p.sizes.length > 0)
+      ? p.sizes.join("; ")
+      : (p.availableDimensions?.join("; ") || p.specifications?.["Dimensions"] || p.specifications?.["Product Dimensions"] || "");
+
+    return [
+      escapeCsv(p.asin || ""),
+      escapeCsv(p.title),
+      escapeCsv(p.price !== null ? p.price : ""),
+      escapeCsv(p.currency),
+      escapeCsv(p.originalPrice !== null ? p.originalPrice : ""),
+      escapeCsv(p.rating !== null ? p.rating : ""),
+      escapeCsv(p.reviewCount !== null ? p.reviewCount : ""),
+      escapeCsv(sizeOrDim),
+      escapeCsv(p.materials?.join("; ") || ""),
+      escapeCsv(p.brand || ""),
+      escapeCsv(p.isPrime ? "Yes" : "No"),
+      escapeCsv(p.inStock ? "Yes" : "No"),
+      escapeCsv(p.url),
+      escapeCsv(p.image)
+    ];
+  });
 
   const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -71,16 +77,18 @@ export function exportToCsv(products: AmazonProduct[], filename = "amazon-scrape
 export function generateMarkdownTable(products: AmazonProduct[]): string {
   if (products.length === 0) return "No products found.";
 
-  let md = `| ASIN | Title | Price | Rating | Sizes | Materials |\n`;
+  let md = `| ASIN | Title | Price | Rating | Size / Dimensions | Materials |\n`;
   md += `| :--- | :--- | :--- | :--- | :--- | :--- |\n`;
 
   for (const p of products) {
     const cleanTitle = p.title.length > 40 ? p.title.slice(0, 40) + "..." : p.title;
     const priceStr = p.price !== null ? `${p.currency}${p.price.toFixed(2)}` : "N/A";
     const ratingStr = p.rating !== null ? `★ ${p.rating} (${p.reviewCount || 0})` : "N/A";
-    const sizesStr = p.sizes?.slice(0, 3).join(", ") || "N/A";
+    const sizeOrDim = (p.sizes && p.sizes.length > 0)
+      ? p.sizes.slice(0, 3).join(", ")
+      : (p.availableDimensions?.slice(0, 2).join(", ") || p.specifications?.["Dimensions"] || p.specifications?.["Product Dimensions"] || "N/A");
     const matsStr = p.materials?.slice(0, 2).join(", ") || "N/A";
-    md += `| ${p.asin || "-"} | [${cleanTitle.replace(/\|/g, "/")}](${p.url}) | ${priceStr} | ${ratingStr} | ${sizesStr} | ${matsStr} |\n`;
+    md += `| ${p.asin || "-"} | [${cleanTitle.replace(/\|/g, "/")}](${p.url}) | ${priceStr} | ${ratingStr} | ${sizeOrDim} | ${matsStr} |\n`;
   }
 
   return md;
